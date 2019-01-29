@@ -21,3 +21,17 @@ button:hover {
   background-color: rgb(14, 14, 79);
   color: gray;
 }
+
+h3 {
+  font-size: 1.25rem;
+}
+
+.movie-title {
+  color: olive;
+}
+.error {
+  color: magenta;
+}
+.loading-message {
+  color: rgb(11, 104, 95)
+}

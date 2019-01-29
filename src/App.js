@@ -102,8 +102,9 @@ class Video extends Component {
     return (
       <div>
         <div>
-          <h3>{this.props.videoError ? this.props.videoError : ""}</h3>
-          <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
+          <h3 className="movie-title"> {this.props.video ? this.props.video.title : ""}</h3>
+          <h3 className="error">{this.props.videoError ? this.props.videoError : ""}</h3>
+          <div className='loading-message'>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
           <video src={this.props.video ? this.props.video.src : ""} controls />
         </div>
         {/* hard-coding for now, but in reall app, get info from the event object that the dom will pass to the event listener */}
@@ -169,14 +170,14 @@ function matchDispatchToProps(dispatch) {
   }
 }
 
-// import { Provider, connect } from "react-redux";
+// import {Provider, connect } from "react-redux";
 // the video component will be passed to the Provider function in the Apps render method. The connect function will link the state in the Video component to the store in the Provider, that holds the state
 Video = connect(mapStateToProps, matchDispatchToProps)(Video)
 
 class App extends Component {
   render() {
     return (
-      // import { Provider } from "react-redux";
+      // import {Provider} from "react-redux";
       <Provider store={store}>
         <div className="App">
           <h1>Practice App</h1>
