@@ -75,17 +75,18 @@ class Video extends Component {
   }
 
   changeVideo(url) {
-    store.dispatch({ type: "VIDEO_LOADING" })
-    // setTimeout simulating time that the .get request could take:
-    setTimeout(function () {
-      axios.get(url).then(function (response) {
-        console.log("response:", response)
-        store.dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
-      }).catch(function (error) {
-        console.log("error:", error)
-        store.dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
-      });
-    }, 2000)
+    this.props.loadVideo(url)
+    // store.dispatch({ type: "VIDEO_LOADING" })
+    // // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
+    // setTimeout(function () {
+    //   axios.get(url).then(function (response) {
+    //     console.log("response:", response)
+    //     store.dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
+    //   }).catch(function (error) {
+    //     console.log("error:", error)
+    //     store.dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
+    //   });
+    // }, 2000)
   }
   render() {
     return (
@@ -102,7 +103,34 @@ class Video extends Component {
     );
   }
 }
-// 
+
+const actions = {
+  loadVideo: function (url) {
+    // when this function is eventually passed to connect and Provider (which has the store), the store.dispatch function will be passed to it as an argument
+    return function (dispatch, getState) {
+      dispatch({ type: "VIDEO_LOADING" })
+      // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
+      setTimeout(function () {
+        axios.get(url).then(function (response) {
+          console.log("response:", response)
+          dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
+        }).catch(function (error) {
+          console.log("error:", error)
+          dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
+        });
+      }, 2000)
+    }
+  }
+}
+
+function matchDispatchToProps(dispatch) {
+  return {
+    loadVideo: function () {
+      dispatch(actions.loadVideo)
+    }
+  }
+}
+
 
 // is this what lets you know which state properties you want on your props object?
 // the Provider will pass the state to this fucntion
@@ -113,9 +141,11 @@ function mapStateToProps(state) {
   };
 }
 
+
+
 // import { Provider, connect } from "react-redux";
 // the video component will be passed to the Provider function in the Apps render method. The connect function will link the state in the Video component to the store in the Provider, that holds the state
-Video = connect(mapStateToProps)(Video)
+Video = connect(mapStateToProps, matchDispatchToProps)(Video)
 
 
 class App extends Component {
