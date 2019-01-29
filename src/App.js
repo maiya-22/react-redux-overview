@@ -10,7 +10,6 @@ const localhost = {
   "/video/1": { title: "California Beach", src: "./videos/California-Beach.mp4" }
 }
 
-// console.log(localhost["/video/1"])
 
 // simulate axios request to backend/ returns a promise with the data:
 const axios = {
@@ -77,6 +76,7 @@ class Video extends Component {
 
   changeVideo(url) {
     store.dispatch({ type: "VIDEO_LOADING" })
+    // setTimeout simulating time that the .get request could take:
     setTimeout(function () {
       axios.get(url).then(function (response) {
         console.log("response:", response)
