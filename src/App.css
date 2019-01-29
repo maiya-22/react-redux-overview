@@ -8,9 +8,16 @@ video {
 }
 
 button {
-  padding: 1rem;
-  background-color: rgb(115, 0, 255);
+  padding: 0.5rem;
+  background-color: rgb(81, 81, 81);
   color: white;
-  font-size: 1.25rem;
+  font-weight: bold;
+  font-size: 0.75rem;
   border-radius: 5px;
+ 
+}
+
+button:hover {
+  background-color: rgb(14, 14, 79);
+  color: gray;
 }

@@ -4,21 +4,33 @@ import "./App.css";
 import { Provider, connect } from "react-redux";
 import { createStore } from "redux";
 
-
 // simulating data objects stored on the backend:
-const data = {
-  videos: {
-    0: { title: "Coffee in the Morning", src: "./videos/Coffee-in-the-Morning.mp4" },
-    1: { title: "California Beach", src: "./videos/California-Beach.mp4" }
-  }
+const localhost = {
+  "/video/0": { title: "Coffee in the Morning", src: "./videos/Coffee-in-the-Morning.mp4" },
+  "/video/1": { title: "California Beach", src: "./videos/California-Beach.mp4" }
 }
 
+// console.log(localhost["/video/1"])
+
+// simulate axios request to backend/ returns a promise with the data:
+const axios = {
+  get: function (url) {
+    return new Promise(function (resolve, reject) {
+      if (localhost[url]) {
+        resolve(localhost[url])
+      } else {
+        reject({ message: "Could not locate the video." })
+      }
+    });
+  }
+}
 
 // create an object to hold the initial state:
 let initialState = {
   video: { title: "Coffee in the Morning", src: "./videos/Coffee-in-the-Morning.mp4" },
   isLoggedIn: false,
-  videoIsLoading: false
+  videoIsLoading: false,
+  videoError: null,
 };
 
 // reduce means to take different things and combine them into one thing.
@@ -30,13 +42,22 @@ let reducer = function (state = initialState, action) {
     case "VIDEO_LOADING":
       return {
         ...state,
-        videoIsLoading: true
+        videoIsLoading: true,
+        videoError: null
       };
     case "VIDEO_LOAD_SUCCESS":
       return {
         ...state,
         videoIsLoading: false,
         video: action.payload
+      };
+    case "VIDEO_LOAD_ERROR":
+      return {
+        ...state,
+        videoIsLoading: false,
+        video: null,
+        videoError: action.error.message
+
       };
     default:
       return state;
@@ -53,18 +74,30 @@ class Video extends Component {
     super(props)
     this.changeVideo = this.changeVideo.bind(this)
   }
-  changeVideo() {
-    store.dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: data.videos[1] })
+
+  changeVideo(url) {
+    store.dispatch({ type: "VIDEO_LOADING" })
+    setTimeout(function () {
+      axios.get(url).then(function (response) {
+        console.log("response:", response)
+        store.dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
+      }).catch(function (error) {
+        console.log("error:", error)
+        store.dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
+      });
+    }, 2000)
   }
   render() {
-
     return (
       <div>
         <div>
-          <h3>{this.props.video.title}</h3>
-          <video src={this.props.video.src} />
+          <h3>{this.props.video ? this.props.video.title : "no video loaded"}</h3>
+          <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
+          <video src={this.props.video ? this.props.video.src : ""} />
         </div>
-        <button onClick={this.changeVideo}>change video</button>
+        <button onClick={(e) => { this.changeVideo("/video/1") }}>load video with id: 1</button>
+        <button onClick={(e) => { this.changeVideo("/video/0") }}>load video with id: 0</button>
+        <button onClick={(e) => { this.changeVideo("/video/zonk") }}>load video with id that is not there</button>
       </div>
     );
   }
@@ -76,7 +109,7 @@ class Video extends Component {
 function mapStateToProps(state) {
   return {
     video: state.video,
-    videoIsLoaded: state.videoIsLoading
+    videoIsLoading: state.videoIsLoading
   };
 }
 
