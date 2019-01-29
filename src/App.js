@@ -55,7 +55,7 @@ let reducer = function (state = initialState, action) {
         videoError: null
       };
     case "LOAD_VIDEO_SUCCESS":
-      console.log("VIDEO SUCCESS")
+      // console.log("VIDEO SUCCESS in reducer")
       return {
         ...state,
         videoIsLoading: false,
@@ -96,14 +96,10 @@ class Video extends Component {
 
   }
 
-
   changeVideo(url) {
-    if (localhost[url]) {
-      this.props.loadVideoSuccess(url)
-    } else {
-      this.props.loadVideoError();
-    }
-
+    this.props.loadVideoAsync(url)
+    // to look at async functionality, uncomment next line && comment-out line above.
+    // this.props.loadVideoSync(url)
   }
   render() {
     return (
@@ -146,24 +142,39 @@ const actionCreators = {
     return {
       type: "VIDEO_LOAD_ERROR", error: { message: "cant find video" }
     }
+  }, loadVideoAsync: function (url) {
+    console.log("URL:", url)
   }
+
+
 }
 function matchDispatchToProps(dispatch) {
   return {
-    loadVideoSuccess: function (url) {
-      dispatch(actionCreators.loadVideoSuccess(url))
+    loadVideoSync: function (url) {
+      if (localhost[url]) {
+        dispatch(actionCreators.loadVideoSuccess(url))
+      } else {
+        dispatch(actionCreators.loadVideoError())
+      }
     },
-    loadVideoError: function () {
-      dispatch(actionCreators.loadVideoError())
+    loadVideoAsync: function (url) {
+      dispatch({ type: "VIDEO_LOADING" })
+      setTimeout(function () {
+        axios.get(url).then(response => {
+          console.log("RESPONSE:", response)
+          dispatch(actionCreators.loadVideoSuccess(url))
+        }).catch(error => {
+          console.log("ERROR:", error)
+          dispatch(actionCreators.loadVideoError())
+        })
+      }, 2000);
     }
   }
-
 }
 
 // import { Provider, connect } from "react-redux";
 // the video component will be passed to the Provider function in the Apps render method. The connect function will link the state in the Video component to the store in the Provider, that holds the state
 Video = connect(mapStateToProps, matchDispatchToProps)(Video)
-
 
 class App extends Component {
   render() {
@@ -177,7 +188,6 @@ class App extends Component {
       </Provider>
     );
   }
-
 
 }
 
