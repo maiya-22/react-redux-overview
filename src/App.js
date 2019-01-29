@@ -102,7 +102,7 @@ class Video extends Component {
   }
 
   changeVideo(url) {
-    this.props.loadVideoSyncronous(url)
+    this.props.loadVideoSynchronous(url)
     // store.dispatch({ type: "VIDEO_LOADING" })
     // // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
     // setTimeout(function () {
@@ -139,7 +139,7 @@ Video.proptypes = {
 }
 
 const actions = {
-  loadVideoSyncronous: function (url) {
+  loadVideoSynchronous: function (url) {
     if (localhost[url]) {
       store.dispatch({
         type: "LOAD_VIDEO_SUCCESS",
@@ -154,7 +154,7 @@ const actions = {
 
 function matchDispatchToProps(dispatch) {
   return {
-    loadVideoSyncronous: actions.loadVideoSyncronous
+    loadVideoSynchronous: actions.loadVideoSynchronous
   }
 }
 
