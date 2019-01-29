@@ -36,8 +36,11 @@ let initialState = {
 };
 
 
-// TYPES: These consts will eventually replace the strings in the reducer, so that you don't accidentally name two different actions the same thing:
-const VIDEO_LOADING = "VIDEO_LOADING"
+// TYPES: These consts will eventually replace the strings in the reducer, so that you don't accidentally name two different actions the same thing and debugging:
+
+const actionTypes = {
+  VIDEO_LOADING: "VIDEO_LOADING"
+}
 
 // reduce means to take different things and combine them into one thing.
 //you are taking the previous state object and the properties that are on the action object, and putting them together on a new object and returning that new object.
@@ -75,8 +78,6 @@ let reducer = function (state = initialState, action) {
 // import {combineReducers } from "redux";
 // const allReducers = combineReducers({ reducer: reducer });
 
-
-
 // PUT ALL THIS IN THE store.js and simply export the finished store:
 // the store is the place where your state is stored, and where the reducer function acts on it, in order to create a new state, when it is updated
 // import { createStore } from "redux";
@@ -94,33 +95,21 @@ class Video extends Component {
     this.changeVideo = this.changeVideo.bind(this)
 
   }
-  componentDidMount() {
-    console.log("PROPS:", this.props)
-  }
-  componentDidUpdate() {
-    console.log("PROPS UPDATE:", this.props)
-  }
+
 
   changeVideo(url) {
-    this.props.loadVideoSynchronous(url)
-    // store.dispatch({ type: "VIDEO_LOADING" })
-    // // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
-    // setTimeout(function () {
-    //   axios.get(url).then(function (response) {
-    //     console.log("response:", response)
-    //     store.dispatch({ type: "LOAD_VIDEO_SUCCESS", payload: response })
-    //   }).catch(function (error) {
-    //     console.log("error:", error)
-    //     store.dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
-    //   });
-    // }, 2000)
+    if (localhost[url]) {
+      this.props.loadVideoSuccess(url)
+    } else {
+      this.props.loadVideoError();
+    }
+
   }
   render() {
     return (
       <div>
         <div>
           <h3>{this.props.videoError ? this.props.videoError : ""}</h3>
-          <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
           <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
           <video src={this.props.video ? this.props.video.src : ""} controls />
         </div>
@@ -133,32 +122,6 @@ class Video extends Component {
   }
 }
 
-
-Video.proptypes = {
-  loadVideo: PropTypes.func.isRequired,
-}
-
-const actions = {
-  loadVideoSynchronous: function (url) {
-    if (localhost[url]) {
-      store.dispatch({
-        type: "LOAD_VIDEO_SUCCESS",
-        payload: localhost[url]
-      })
-    } else {
-      store.dispatch({ type: "VIDEO_LOAD_ERROR", error: { message: "cant find video" } })
-
-    }
-  }
-}
-
-function matchDispatchToProps(dispatch) {
-  return {
-    loadVideoSynchronous: actions.loadVideoSynchronous
-  }
-}
-
-
 // is this what lets you know which state properties you want on your props object?
 // the Provider will pass the state to this fucntion
 function mapStateToProps(state) {
@@ -169,7 +132,33 @@ function mapStateToProps(state) {
   };
 }
 
+// these functions simply return an objec
+const actionCreators = {
+  loadVideoSuccess: function (url) {
+    // logic to format action
+    return {
+      type: "LOAD_VIDEO_SUCCESS",
+      payload: localhost[url]
+    }
+  },
+  loadVideoError: function () {
+    // logic to format action
+    return {
+      type: "VIDEO_LOAD_ERROR", error: { message: "cant find video" }
+    }
+  }
+}
+function matchDispatchToProps(dispatch) {
+  return {
+    loadVideoSuccess: function (url) {
+      dispatch(actionCreators.loadVideoSuccess(url))
+    },
+    loadVideoError: function () {
+      dispatch(actionCreators.loadVideoError())
+    }
+  }
 
+}
 
 // import { Provider, connect } from "react-redux";
 // the video component will be passed to the Provider function in the Apps render method. The connect function will link the state in the Video component to the store in the Provider, that holds the state
