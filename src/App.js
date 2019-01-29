@@ -5,7 +5,7 @@ import { Provider, connect } from "react-redux";
 import { createStore, applyMiddleware, combineReducers, compose } from "redux";
 import thunk from 'redux-thunk'
 import PropTypes from 'prop-types';
-
+// combineReducers and PropTypes not being implemented yet.
 
 // simulating data objects stored on a server on the backend:
 const localhost = {
