@@ -132,7 +132,7 @@ function mapStateToProps(state) {
   };
 }
 
-// these functions simply return an objec
+// these functions simply return an object
 const actionCreators = {
   loadVideoSuccess: function (url) {
     // logic to format action
