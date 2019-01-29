@@ -2,7 +2,10 @@ import React, { Component } from "react";
 import "./App.css";
 
 import { Provider, connect } from "react-redux";
-import { createStore } from "redux";
+import { createStore, applyMiddleware, combineReducers, compose } from "redux";
+import thunk from 'redux-thunk'
+import PropTypes from 'prop-types';
+
 
 // simulating data objects stored on the backend:
 const localhost = {
@@ -32,6 +35,10 @@ let initialState = {
   videoError: null,
 };
 
+
+// TYPES: These consts will eventually replace the strings in the reducer, so that you don't accidentally name two different actions the same thing:
+const VIDEO_LOADING = "VIDEO_LOADING"
+
 // reduce means to take different things and combine them into one thing.
 //you are taking the previous state object and the properties that are on the action object, and putting them together on a new object and returning that new object.
 let reducer = function (state = initialState, action) {
@@ -44,12 +51,15 @@ let reducer = function (state = initialState, action) {
         videoIsLoading: true,
         videoError: null
       };
-    case "VIDEO_LOAD_SUCCESS":
+    case "LOAD_VIDEO_SUCCESS":
+      console.log("VIDEO SUCCESS")
       return {
         ...state,
         videoIsLoading: false,
-        video: action.payload
+        video: action.payload,
+        videoError: null
       };
+    // store.dispatch({ type: "VIDEO_LOAD_ERROR", error: { message: "cant find video" } })
     case "VIDEO_LOAD_ERROR":
       return {
         ...state,
@@ -62,26 +72,43 @@ let reducer = function (state = initialState, action) {
       return state;
   }
 };
+// import {combineReducers } from "redux";
+// const allReducers = combineReducers({ reducer: reducer });
 
+
+
+// PUT ALL THIS IN THE store.js and simply export the finished store:
 // the store is the place where your state is stored, and where the reducer function acts on it, in order to create a new state, when it is updated
 // import { createStore } from "redux";
-const store = createStore(reducer)
+// import { applyMiddleware } from "redux";
+// import { compose } from "redux";
+// import thunk from 'redux-thunk'
+// not sure why you use thunk. I though it was so that store would respond to async dispatches, but app seems to do that without it.
+const middleware = [thunk];
+const store = createStore(reducer, initialState, compose(applyMiddleware(...middleware), window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()))
 
 
 class Video extends Component {
   constructor(props) {
     super(props)
     this.changeVideo = this.changeVideo.bind(this)
+
+  }
+  componentDidMount() {
+    console.log("PROPS:", this.props)
+  }
+  componentDidUpdate() {
+    console.log("PROPS UPDATE:", this.props)
   }
 
   changeVideo(url) {
-    this.props.loadVideo(url)
+    this.props.loadVideoSyncronous(url)
     // store.dispatch({ type: "VIDEO_LOADING" })
     // // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
     // setTimeout(function () {
     //   axios.get(url).then(function (response) {
     //     console.log("response:", response)
-    //     store.dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
+    //     store.dispatch({ type: "LOAD_VIDEO_SUCCESS", payload: response })
     //   }).catch(function (error) {
     //     console.log("error:", error)
     //     store.dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
@@ -92,42 +119,42 @@ class Video extends Component {
     return (
       <div>
         <div>
-          <h3>{this.props.video ? this.props.video.title : "no video loaded"}</h3>
+          <h3>{this.props.videoError ? this.props.videoError : ""}</h3>
           <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
-          <video src={this.props.video ? this.props.video.src : ""} />
+          <div>{this.props.videoIsLoading ? "Next video is loading ..." : ""}</div>
+          <video src={this.props.video ? this.props.video.src : ""} controls />
         </div>
-        <button onClick={(e) => { this.changeVideo("/video/1") }}>load video with id: 1</button>
-        <button onClick={(e) => { this.changeVideo("/video/0") }}>load video with id: 0</button>
-        <button onClick={(e) => { this.changeVideo("/video/zonk") }}>load video with id that is not there</button>
+        {/* hard-coding for now, but eventually get info from the event object that the dom will pass to the event listener */}
+        <button onClick={(event) => { this.changeVideo("/video/1") }}>load video with id: 1</button>
+        <button onClick={(event) => { this.changeVideo("/video/0") }}>load video with id: 0</button>
+        <button onClick={(event) => { this.changeVideo("/video/zonk") }}>load video with id that is not there</button>
       </div>
     );
   }
 }
 
+
+Video.proptypes = {
+  loadVideo: PropTypes.func.isRequired,
+}
+
 const actions = {
-  loadVideo: function (url) {
-    // when this function is eventually passed to connect and Provider (which has the store), the store.dispatch function will be passed to it as an argument
-    return function (dispatch, getState) {
-      dispatch({ type: "VIDEO_LOADING" })
-      // setTimeout simulating time that the .get request could take. Function would work without setTimeout.
-      setTimeout(function () {
-        axios.get(url).then(function (response) {
-          console.log("response:", response)
-          dispatch({ type: "VIDEO_LOAD_SUCCESS", payload: response })
-        }).catch(function (error) {
-          console.log("error:", error)
-          dispatch({ type: "VIDEO_LOAD_ERROR", error: error })
-        });
-      }, 2000)
+  loadVideoSyncronous: function (url) {
+    if (localhost[url]) {
+      store.dispatch({
+        type: "LOAD_VIDEO_SUCCESS",
+        payload: localhost[url]
+      })
+    } else {
+      store.dispatch({ type: "VIDEO_LOAD_ERROR", error: { message: "cant find video" } })
+
     }
   }
 }
 
 function matchDispatchToProps(dispatch) {
   return {
-    loadVideo: function () {
-      dispatch(actions.loadVideo)
-    }
+    loadVideoSyncronous: actions.loadVideoSyncronous
   }
 }
 
@@ -137,7 +164,8 @@ function matchDispatchToProps(dispatch) {
 function mapStateToProps(state) {
   return {
     video: state.video,
-    videoIsLoading: state.videoIsLoading
+    videoIsLoading: state.videoIsLoading,
+    videoError: state.videoError
   };
 }
 
